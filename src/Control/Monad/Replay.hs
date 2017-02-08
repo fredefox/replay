@@ -19,15 +19,15 @@ module Control.Monad.Replay (
   -- * The replay monad
     ReplayT
   , Replay
+  -- * Construction
+  , io
+  , ask
+  , liftR
   -- * Evaluation
   , runReplayT
   , runReplay
   , run
   , running
-  -- * Construction
-  , io
-  , ask
-  , liftR
   -- * Results
   , addAnswer
   , Trace

@@ -11,14 +11,14 @@ module Control.Monad.Consumer (
   -- * The consumer monad
     ConsumerT
   , Consumer
-  -- * Evaluation
-  , runConsumerT
-  , runConsumer
   -- * Construction
   , next
   , peek
   , skip
   , skipMaybe
+  -- * Evaluation
+  , runConsumerT
+  , runConsumer
   ) where
 
 import Prelude hiding (tail)
