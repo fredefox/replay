@@ -15,18 +15,23 @@ The 'Replay' monad represents computations that may be "replayed". Replayed
 computations use values from the input stream rather than performing the monadic
 computation that it wraps.
 -}
-module Control.Monad.Replay
-  ( ReplayT
+module Control.Monad.Replay (
+  -- * The replay monad
+    ReplayT
   , Replay
-  , Item
+  -- * Evaluation
   , runReplayT
   , runReplay
-  , io
-  , ask
   , run
   , running
+  -- * Construction
+  , io
+  , ask
   , liftR
+  -- * Results
   , addAnswer
+  , Trace
+  , Item
   ) where
 
 import           Data.Maybe
@@ -128,7 +133,7 @@ running prog = play []
       Right x -> return x
 
 -- | `addAnswer` adds an answer to the end of a trace.
-addAnswer :: [Item r] -> r -> [Item r]
+addAnswer :: Trace r -> r -> Trace r
 addAnswer t a = t ++ pure (Answer a)
 
 -- | `liftR` allows us to perform some monadic computation in the replay monad.
