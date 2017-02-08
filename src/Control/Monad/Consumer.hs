@@ -1,10 +1,20 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
-module Control.Monad.Consumer
-  ( ConsumerT
+{- |
+Module : Control.Monad.Consumer
+
+Consumer is a simple wrapper around the state monad. The state in a consumer is
+a stream (implemented with lists). A consumer can remove values (consume) from
+the head of the list.
+-}
+module Control.Monad.Consumer (
+  -- * The consumer monad
+    ConsumerT
   , Consumer
+  -- * Evaluation
   , runConsumerT
   , runConsumer
+  -- * Construction
   , next
   , peek
   , skip
@@ -28,17 +38,23 @@ runConsumerT = runStateT
 runConsumer :: Consumer s a -> [s] -> (a, [s])
 runConsumer = runState
 
+-- | Consumes the next input from the stream if it is non-empty.
 next :: MonadConsumer s m => m (Maybe s)
-next = get >>= \s -> case s of
-  []     -> return Nothing
-  (x:xs) -> put xs >> return (Just x)
+next = do
+  r <- peek
+  skip
+  return r
 
+-- | Returns the head of the stream without consuming it.
 peek :: MonadConsumer s m => m (Maybe s)
 peek = listToMaybe <$> get
 
+-- | Consumes the head of the stream and ignores the result.
 skip :: MonadConsumer s m => m ()
 skip = modify tail
 
+-- | Consumes the head of the stream iff `p x` holds where x is the head of the
+-- stream.
 skipMaybe :: MonadConsumer s m => (s -> Bool) -> m (Maybe s)
 skipMaybe p = do
   x <- peek
