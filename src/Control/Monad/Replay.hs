@@ -16,7 +16,11 @@ computations use values from the input stream rather than performing the monadic
 computation that it wraps.
 -}
 module Control.Monad.Replay
-  ( io
+  ( ReplayT
+  , Replay
+  , runReplayT
+  , runReplay
+  , io
   , ask
   , run
   , running
@@ -37,6 +41,11 @@ type ReplayT q r m a = ConsumerT (Item r) (ExceptT q (WriterT (Trace r) m)) a
 
 runReplayT :: ReplayT q r m a -> Trace r -> m (Either q (a, Trace r), Trace r)
 runReplayT r t = runWriterT . runExceptT . (`runConsumerT` t) $ r
+
+type Replay q r a = ReplayT q r Identity a
+
+runReplay :: Replay q r a -> Trace r -> (Either q (a, Trace r), Trace r)
+runReplay r t = runIdentity . (`runReplayT` t) $ r
 
 data Item  r = Answer r | Result String deriving (Show)
 type Trace r = [Item r]
