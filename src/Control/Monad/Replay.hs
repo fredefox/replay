@@ -88,14 +88,24 @@ answer :: Item r -> Maybe r
 answer (Answer r) = Just r
 answer _          = Nothing
 
-run :: ReplayT q r IO a -> Trace r -> IO (Either (q, Trace r) a)
+run :: Monad m => ReplayT q r m a -> Trace r -> m (Either (q, Trace r) a)
 run r t = change <$> runReplayT r t
   where
-    change :: (Either q (a, Trace r), Trace r) -> Either (q, Trace r) a
     change (e, t') = case e of
       Left q       -> Left (q, t')
       Right (a, _) -> Right a
 
+running :: ReplayT String String IO a -> IO a
+running prog = play []
+ where
+  play t = do
+    r <- run prog t    -- this is the same prog every time!
+    case r of
+      Left (q,t2) -> do
+        putStr ("Question: " ++ q ++ " ")
+        a <- getLine
+        play (addAnswer t2 a)
+      Right x -> return x
 
 -- Example:
 example :: ReplayT String String IO Int
