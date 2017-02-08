@@ -1,6 +1,7 @@
 module Main where
 
 import Data.IORef
+import Control.Monad
 import Control.Monad.Replay
 import System.Exit
 
@@ -13,9 +14,7 @@ emptyTrace = []
 main :: IO ()
 main = do
   results <- runTests
-  if and results
-    then return ()
-    else exitFailure
+  unless (and results) exitFailure
 
 -- | Programs are parameterised over a 'tick' action.
 --   Questions are () and answers are integers.
