@@ -2,6 +2,7 @@ module Control.Monad.Replay
   ( io
   , ask
   , run
+  , running
   ) where
 
 import           Data.Maybe
@@ -88,6 +89,8 @@ answer :: Item r -> Maybe r
 answer (Answer r) = Just r
 answer _          = Nothing
 
+-- | `run` runs a program and discards the trace if the result is a success.
+-- If the result is a failure that failure and the trace is returned.
 run :: Monad m => ReplayT q r m a -> Trace r -> m (Either (q, Trace r) a)
 run r t = change <$> runReplayT r t
   where
@@ -95,6 +98,8 @@ run r t = change <$> runReplayT r t
       Left q       -> Left (q, t')
       Right (a, _) -> Right a
 
+-- | `running r` keeps replaying `r` until all answers have been
+-- provided. The answers are provided interactively by the user.
 running :: ReplayT String String IO a -> IO a
 running prog = play []
  where
@@ -107,24 +112,6 @@ running prog = play []
         play (addAnswer t2 a)
       Right x -> return x
 
--- Example:
-example :: ReplayT String String IO Int
-example = do
-  t0 <- io getCurrentTime
-  io (putStrLn "Hello!")
-  age <- ask "What is your age?"
-  io (putStrLn ("You are " ++ age))
-  name <- ask "What is your name?"
-  io (putStrLn (name ++ " is " ++ age ++ " years old"))
-  t1 <- io getCurrentTime
-  io (putStrLn ("Total time: " ++ show (diffUTCTime t1 t0)))
-  return (read age)
-
-res0 :: [Item r]
-res0 = [Result "2017-02-08 14:50:35.16871 UTC",Result "()"]
-
-res1 :: [Item String]
-res1 = addAnswer res0 "27"
-
+-- | `addAnswer` adds an answer to the end of a trace.
 addAnswer :: [Item r] -> r -> [Item r]
 addAnswer t a = t ++ pure (Answer a)
