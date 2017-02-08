@@ -18,6 +18,7 @@ computation that it wraps.
 module Control.Monad.Replay
   ( ReplayT
   , Replay
+  , Item
   , runReplayT
   , runReplay
   , io
@@ -25,6 +26,7 @@ module Control.Monad.Replay
   , run
   , running
   , liftR
+  , addAnswer
   ) where
 
 import           Data.Maybe
