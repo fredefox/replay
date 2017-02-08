@@ -1,8 +1,13 @@
 module Main where
 
 import Data.IORef
-import Replay
+import Control.Monad.Replay
 import System.Exit
+
+type ReplayIO q r a = ReplayT q r IO a
+
+emptyTrace :: [Item r]
+emptyTrace = []
 
 -- | Runs the test suite for the replay library
 main :: IO ()
@@ -14,7 +19,7 @@ main = do
 
 -- | Programs are parameterised over a 'tick' action.
 --   Questions are () and answers are integers.
-type Program = IO () -> Replay () Int Int
+type Program = IO () -> ReplayIO () Int Int
 
 -- | A result is a pair of the final result of the program
 --   and the number of 'ticks' executed.
