@@ -1,12 +1,30 @@
+{- |
+Module      :  Control.Monad.Replay
+
+[Computation type:] Computations that can be replayed.
+
+[Binding strategy:] This monad is basically a wrapper around the monad-stack:
+
+  * ConsumerT (defined in 'Control.Monad.Consumer.ConsumerT')
+  * ExceptT
+  * WriterT
+
+[Useful for:] Memoizing monadic computations.
+
+The 'Replay' monad represents computations that may be "replayed". Replayed
+computations use values from the input stream rather than performing the monadic
+computation that it wraps.
+-}
 module Control.Monad.Replay
   ( io
   , ask
   , run
   , running
+  , liftR
   ) where
 
 import           Data.Maybe
-import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 import           Control.Monad.Identity
 import qualified Control.Monad.Consumer as C
 import           Control.Monad.Consumer (ConsumerT, runConsumerT)
@@ -23,25 +41,14 @@ runReplayT r t = runWriterT . runExceptT . (`runConsumerT` t) $ r
 data Item  r = Answer r | Result String deriving (Show)
 type Trace r = [Item r]
 
--- | `io` allows us to perform IO actions in our computation. If there is
--- already a result for an io computation in the input trace, the computation is
--- not performed and the result from the trace is used instead.
+-- | Specialized version of `liftR`
 io  :: (Show a, Read a) => IO a -> ReplayT q r IO a
-io act = do
-  r <- memoized
-  tell (Result $ show r)
-  return r
-    where
-      memoized = do
-        r <- askResult
-        case r of
-          Nothing -> liftIO act
-          Just r' -> return (read r')
+io = liftR
 
 tell :: Monad m => Item r -> ReplayT q r m ()
 tell = W.tell . pure
 
--- | ask stops the whole program to ask the user a question, returning the
+-- | `ask` stops the whole program to ask the user a question, returning the
 -- question along with the trace of the computation so far. The user of the
 -- program can then examine the question. When the user wants to continue the
 -- program they restart it with the generated trace, extended with an answer to
@@ -57,7 +64,7 @@ ask q = do
     Nothing -> E.throwError q
     Just a' -> tell (Answer a') >> return a'
 
--- | `askFor p` returns the head of the stream `x` if `p x` is a `Just`.
+-- | @`askFor` p@ returns the head of the stream @x@ if @p x@ is a @Just@.
 askFor :: Monad m => (Item r -> Maybe x) -> ReplayT q r m (Maybe x)
 askFor p = join . fmap p <$> C.skipMaybe (isJust . p)
 
@@ -95,7 +102,7 @@ run r t = change <$> runReplayT r t
       Left q       -> Left (q, t')
       Right (a, _) -> Right a
 
--- | `running r` keeps replaying `r` until all answers have been
+-- | @`running` r@ keeps replaying @r@ until all answers have been
 -- provided. The answers are provided interactively by the user.
 running :: ReplayT String String IO a -> IO a
 running prog = play []
@@ -112,3 +119,18 @@ running prog = play []
 -- | `addAnswer` adds an answer to the end of a trace.
 addAnswer :: [Item r] -> r -> [Item r]
 addAnswer t a = t ++ pure (Answer a)
+
+-- | `liftR` allows us to perform some monadic computation in the replay monad.
+-- If there is already a result at the current point in the trace, the
+-- computation is not performed and that is used instead.
+liftR :: (Show a, Read a, Monad m) => m a -> ReplayT q r m a
+liftR act = do
+  r <- memoized
+  tell (Result $ show r)
+  return r
+    where
+      memoized = do
+        r <- askResult
+        case r of
+          Nothing -> lift . lift . lift $ act
+          Just r' -> return (read r')
