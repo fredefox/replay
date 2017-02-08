@@ -15,9 +15,6 @@ import           Control.Monad.Except (ExceptT, runExceptT)
 import qualified Control.Monad.Writer as W
 import           Control.Monad.Writer (WriterT, runWriterT)
 
-import Data.Time
-import Debug.Trace
-
 type ReplayT q r m a = ConsumerT (Item r) (ExceptT q (WriterT (Trace r) m)) a
 
 runReplayT :: ReplayT q r m a -> Trace r -> m (Either q (a, Trace r), Trace r)
