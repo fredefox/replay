@@ -122,11 +122,11 @@ library `QuickCheck` can be found in `TestProp.hs`.
 I've chosen to follow the layout of the handed-out test-file for the test-cases,
 but I believe that they are very limited. I have identified two problems:
 
-    * We can not test how `ask` works if there are no results for the question
-      in the input-stream.
-    * We cannot test the "memoization"-mechanism of the replay monad. That is,
-      we can not test that the result of an some computation is deferred in
-      preference for a previously computed value in the input-stream.
+ * We can not test how `ask` works if there are no results for the question in
+   the input-stream.
+ * We cannot test the "memoization"-mechanism of the replay monad. That is, we
+   can not test that the result of an some computation is deferred in preference
+   for a previously computed value in the input-stream.
 
 For this reason I've just added 2 very simple test-cases in this module.
 
