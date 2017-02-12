@@ -1,5 +1,5 @@
 name:                replay
-version:             0.1.0.0
+version:             0.1.1.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/fredefox/replay#readme
@@ -28,14 +28,20 @@ executable replay
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , replay
+                     , scotty == 0.11.*
+                     , containers == 0.5.*
+                     , text == 1.2.*
   default-language:    Haskell2010
 
 test-suite test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  main-is:             Spec.hs
+  other-modules:       TestCase
+                     , TestProp
+  main-is:             Test.hs
   build-depends:       base
                      , replay
+                     , QuickCheck == 2.8.*
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
