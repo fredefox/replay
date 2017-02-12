@@ -32,7 +32,7 @@ module Control.Monad.Replay (
   -- * Results
   , addAnswer
   , Trace
-  , Item
+  , Item(..)
   ) where
 
 import           Data.Maybe
@@ -55,7 +55,7 @@ type Replay q r a = ReplayT q r Identity a
 runReplay :: Replay q r a -> Trace r -> (Either q (a, Trace r), Trace r)
 runReplay r t = runIdentity . (`runReplayT` t) $ r
 
-data Item  r = Answer r | Result String deriving (Show)
+data Item  r = Answer r | Result String deriving (Eq, Show)
 type Trace r = [Item r]
 
 -- | Specialized version of `liftR`
