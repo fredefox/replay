@@ -3,7 +3,7 @@
 {- |
 Module : PropTest
 
-Property based checking of Replay
+Property based checking of Replay.
 -}
 module TestProp (main) where
 
@@ -33,7 +33,7 @@ testAsk = quickCheck (propAsk :: Bool -> [Item Bool] -> Property)
 
 propLift :: forall a b . (Eq a, Eq b, Show a, Show b, Read a) => Identity a -> [Item b] -> Property
 propLift m xs = runReplay (liftR m) xs === case xs of
-  -- if the head is a result that parses to an `a` -- if it's an unsuccesfull
+  -- if the head is a result that parses to an `a` -- if it's an unsuccessful
   -- parse, then it's a runtime-error.
   (Result s:xss) -> (Right (read s, xss) :: Either Void (a, Trace b), [Result s])
   _              -> (Right (a, xs), [Result (show a)]) where a = runIdentity m

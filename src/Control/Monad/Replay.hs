@@ -59,8 +59,8 @@ data Item  r = Answer r | Result String deriving (Eq, Show)
 type Trace r = [Item r]
 
 -- | Specialized version of `liftR`
-io  :: (Show a, Read a) => IO a -> ReplayT q r IO a
-io = liftR
+io  :: (MonadIO m, Show a, Read a) => IO a -> ReplayT q r m a
+io = liftR . liftIO
 
 tell :: Monad m => Item r -> ReplayT q r m ()
 tell = W.tell . pure
@@ -146,7 +146,7 @@ addAnswer t a = t ++ pure (Answer a)
 -- | `liftR` allows us to perform some monadic computation in the replay monad.
 -- If there is already a result at the current point in the trace, the
 -- computation is not performed and that is used instead.
-liftR :: (Show a, Read a, Monad m) => m a -> ReplayT q r m a
+liftR :: (Monad m, Show a, Read a) => m a -> ReplayT q r m a
 liftR act = do
   r <- memoized
   tell (Result $ show r)
