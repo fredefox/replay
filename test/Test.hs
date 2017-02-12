@@ -36,11 +36,10 @@ data TestCase = TestCase
 
 -- | Running a program.
 runProgram :: Program -> Input -> IO Result
-runProgram p inp = do
-    counter <- newIORef 0
-    let tick = modifyIORef counter (+1)
-    x <- play (p tick) emptyTrace inp
-    n <- readIORef counter
+runProgram p inp0 = do
+    (readTick, tick) <- ticker
+    x <- play (p tick) emptyTrace inp0
+    n <- readTick
     return (x, n)
   where
     play prog t inp = do
@@ -50,6 +49,13 @@ runProgram p inp = do
         Left (_, t') -> case inp of
           []       -> error "too few inputs"
           a : inp' -> play prog (addAnswer t' a) inp'
+
+-- | `ticker` returns is a wrapper around an IORef and exposes a way of reading
+-- the tickers value and a way of incrementing (ticking) the counter.
+ticker :: IO (IO Int, IO ())
+ticker = do
+  c <- newIORef 0
+  return (readIORef c, modifyIORef c succ)
 
 -- | Checking a test case. Compares expected and actual results.
 checkTestCase :: TestCase -> IO Bool
@@ -63,6 +69,14 @@ checkTestCase (TestCase name i r p) = do
          >> return False
 
 
+-- TODO: With this setup we have no way of testing what happens when `ask`'s are
+-- performed for which there is no matching result in the input. We essentially
+-- have no way of expecting `Left`'s as a result from `run`.
+--
+-- TODO: We also do not have a way of testing the memoization mechanism since
+-- all inputs in this test-module are appended to the input stream via
+-- `addAnswer`.
+--
 -- | List of interesting test cases.
 testCases :: [TestCase]
 testCases =
@@ -76,6 +90,18 @@ testCases =
         b <- io (return 1)
         c <- ask () -- should be 4
         return (a + b + c)
+    }
+  , TestCase
+    { testName    = "tick twice"
+    , testInput   = [4]
+    , testResult  = (0, 2)
+    , testProgram = \tick -> io tick >> io tick >> return 0
+    }
+  , TestCase
+    { testName    = "return"
+    , testInput   = []
+    , testResult  = (0, 0)
+    , testProgram = const (return 0)
     }
   ]
 
