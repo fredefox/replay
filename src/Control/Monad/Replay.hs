@@ -28,6 +28,7 @@ module Control.Monad.Replay (
   , runReplay
   , run
   , running
+  , runningWith
   -- * Results
   , addAnswer
   , Trace
@@ -121,16 +122,22 @@ run r t = change <$> runReplayT r t
 -- | @`running` r@ keeps replaying @r@ until all answers have been
 -- provided. The answers are provided interactively by the user.
 running :: ReplayT String String IO a -> IO a
-running prog = play []
- where
-  play t = do
-    r <- run prog t    -- this is the same prog every time!
-    case r of
-      Left (q,t2) -> do
-        putStr ("Question: " ++ q ++ " ")
-        a <- getLine
-        play (addAnswer t2 a)
-      Right x -> return x
+running prog = prog `runningWith` \q -> do
+    putStr ("Question: " ++ q ++ " ")
+    getLine
+
+-- | `runningWith` generalizes `running` to use an arbitrary monadic computation
+-- to provide answers to questions.
+runningWith :: Monad m => ReplayT q r m a -> (q -> m r) -> m a
+runningWith prog oracle = play []
+  where
+    play t = do
+      r <- run prog t
+      case r of
+        Left (q, t2) -> do
+          a <- oracle q
+          play (addAnswer t2 a)
+        Right x -> return x
 
 -- | `addAnswer` adds an answer to the end of a trace.
 addAnswer :: Trace r -> r -> Trace r
