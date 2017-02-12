@@ -1,7 +1,7 @@
 name:                replay
-version:             0.1.1.1
--- synopsis:
--- description:
+version:             0.1.1.2
+synopsis:            A monad for memoizing computations.
+description:         Please see README.md
 homepage:            https://github.com/fredefox/replay#readme
 license:             BSD3
 license-file:        LICENSE
@@ -11,6 +11,7 @@ copyright:           Frederik Hanghøj Iversen
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
+                   , stack.yaml
 cabal-version:       >=1.10
 
 library
